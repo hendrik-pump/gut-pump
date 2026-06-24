@@ -124,15 +124,16 @@ body {
   display: flex;
   gap: 10px;
   padding: 0 16px;
-  overflow-x: auto;
 }
+.stats-row + .stats-row { margin-top: 10px; }
 .stat-card {
   background: #12160f;
   border-radius: 16px;
   padding: 12px 14px;
-  flex: 0 0 150px;
-  min-width: 150px;
+  flex: 1 1 0;
+  min-width: 0;
 }
+.stat-card-wide { flex: 1 1 100%; }
 .stat-card-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
 .stat-title { font-size: 12px; font-weight: 700; color: var(--text-light); line-height: 1.25; }
 .stat-sub { font-size: 10px; color: var(--text-muted); }

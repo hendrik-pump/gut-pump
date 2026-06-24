@@ -14,6 +14,8 @@ export function renderStatsSection(container, exercises) {
     <div class="stats-row">
       ${dailyBarsCardHtml("Gewichtssteigerungen", days, weightCounts, "stat-bar-purple")}
       ${dailyBarsCardHtml("Wiederholungssteigerungen", days, repsCounts, "stat-bar-blue")}
+    </div>
+    <div class="stats-row stats-row-wide">
       ${exerciseCountCardHtml(exerciseCount)}
     </div>
   `;
@@ -49,7 +51,7 @@ function exerciseCountCardHtml(count) {
   else if (count >= 5) colorClass = "hbar-green";
 
   return `
-    <div class="stat-card">
+    <div class="stat-card stat-card-wide">
       <div class="stat-card-header">
         <span class="stat-title">Anzahl Übungen</span>
         <span class="stat-sub">Letzter Trainingstag</span>
