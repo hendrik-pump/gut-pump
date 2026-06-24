@@ -6,8 +6,10 @@
 
 import { ensureSeedImported, getAllExercises, addExercise, updateExercise, deleteExercise, addSession, updateSession } from "./db.js";
 import { renderExerciseList, renderSessionsBadge, toggleEntryForm } from "./render-list.js";
+import { renderStatsSection } from "./render-stats.js";
 import { buildRows, renderFilterPills, renderTable, FILTER_ALL, startEditCell, restoreCell, commitCellDisplay } from "./render-table.js";
 import { initDialogs, openAddDialog, openEditDialog } from "./render-dialogs.js";
+import { exportRowsAsXlsx } from "./xlsx-export.js";
 import { isValidWeight, isValidReps } from "./utils.js";
 
 const state = {
@@ -18,6 +20,7 @@ const state = {
 };
 
 const listContainer = document.getElementById("exercise-list");
+const statsSection = document.getElementById("stats-section");
 const sessionsBadge = document.getElementById("sessions-badge");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsMenu = document.getElementById("settings-menu");
@@ -29,6 +32,7 @@ const tableBackBtn = document.getElementById("table-back-btn");
 const filterPillsContainer = document.getElementById("filter-pills");
 const tableBody = document.getElementById("data-table-body");
 const tableCount = document.getElementById("table-count");
+const exportXlsxBtn = document.getElementById("export-xlsx-btn");
 
 async function init() {
   await ensureSeedImported();
@@ -53,6 +57,7 @@ async function refreshAndRender() {
 function renderCurrentView() {
   renderExerciseList(listContainer, state.exercises, state.editMode);
   renderSessionsBadge(sessionsBadge, state.exercises);
+  renderStatsSection(statsSection, state.exercises);
 
   if (state.currentView === "table") {
     renderFilterPills(filterPillsContainer, state.tableFilter);
@@ -149,6 +154,11 @@ function showListView() {
 
 function wireTableView() {
   tableBackBtn.addEventListener("click", showListView);
+
+  exportXlsxBtn.addEventListener("click", () => {
+    const rows = buildRows(state.exercises); // gesamte Tabelle, unabhängig vom aktiven Filter
+    exportRowsAsXlsx(rows, "Gut-pump-Datentabelle.xlsx");
+  });
 
   filterPillsContainer.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action='set-table-filter']");
