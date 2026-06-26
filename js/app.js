@@ -10,7 +10,7 @@ import { renderStatsSection } from "./render-stats.js";
 import { buildRows, renderFilterPills, renderTable, FILTER_ALL, startEditCell, restoreCell, commitCellDisplay } from "./render-table.js";
 import { initDialogs, openAddDialog, openEditDialog } from "./render-dialogs.js";
 import { exportRowsAsXlsx } from "./xlsx-export.js";
-import { isValidWeight, isValidReps } from "./utils.js";
+import { isValidWeight, isValidReps, isValidZeit, isValidIntensitaet, isCardioExercise } from "./utils.js";
 
 const state = {
   exercises: [],
@@ -126,14 +126,20 @@ function wireExerciseList() {
 }
 
 async function handleSaveEntry(card, exerciseId) {
-  const kgInput = card.querySelector(".input-kg");
-  const rInput = card.querySelector(".input-r");
-  const kg = parseFloat(kgInput.value);
-  const r = parseInt(rInput.value, 10);
+  const exercise = state.exercises.find((ex) => ex.id === exerciseId);
+  const cardio = isCardioExercise(exercise);
+  const primaryInput = card.querySelector(".input-primary");
+  const secondaryInput = card.querySelector(".input-secondary");
+  const primary = parseFloat(primaryInput.value);
+  const secondary = cardio ? parseFloat(secondaryInput.value) : parseInt(secondaryInput.value, 10);
 
-  if (!isValidWeight(kg) || !isValidReps(r)) return; // Pflichtfelder/Validierung nicht erfüllt
-
-  await addSession(exerciseId, { kg, r });
+  if (cardio) {
+    if (!isValidZeit(primary) || !isValidIntensitaet(secondary)) return;
+    await addSession(exerciseId, { zeit: primary, intensitaet: secondary });
+  } else {
+    if (!isValidWeight(primary) || !isValidReps(secondary)) return;
+    await addSession(exerciseId, { kg: primary, r: secondary });
+  }
   await refreshAndRender();
 }
 
@@ -188,16 +194,23 @@ function wireTableView() {
   });
 }
 
+const FIELD_VALIDATORS = {
+  kg: { parse: parseFloat, isValid: isValidWeight },
+  r: { parse: (v) => parseInt(v, 10), isValid: isValidReps },
+  zeit: { parse: parseFloat, isValid: isValidZeit },
+  intensitaet: { parse: parseFloat, isValid: isValidIntensitaet },
+};
+
 async function commitCellEdit(td, rawValue) {
   const field = td.dataset.field;
   const row = td.closest("tr");
   const exerciseId = row.dataset.exerciseId;
   const sessionId = row.dataset.sessionId;
 
-  const parsed = field === "kg" ? parseFloat(rawValue) : parseInt(rawValue, 10);
-  const valid = field === "kg" ? isValidWeight(parsed) : isValidReps(parsed);
+  const { parse, isValid } = FIELD_VALIDATORS[field];
+  const parsed = parse(rawValue);
 
-  if (!valid) {
+  if (!isValid(parsed)) {
     restoreCell(td);
     return;
   }
@@ -209,12 +222,12 @@ async function commitCellEdit(td, rawValue) {
 
 // ---------------- Dialoge: Übung hinzufügen / bearbeiten / löschen ----------------
 
-async function handleDialogSave({ id, name, grp, img }) {
+async function handleDialogSave({ id, name, grp, type, img }) {
   if (id) {
-    await updateExercise(id, { name, grp, img });
+    await updateExercise(id, { name, grp, img }); // type bewusst nicht übergeben, bleibt unveränderlich
     await refreshAndRender();
   } else {
-    const created = await addExercise({ name, grp, img });
+    const created = await addExercise({ name, grp, type, img });
     await refreshAndRender();
     const newCard = listContainer.querySelector(`[data-id="${created.id}"]`);
     newCard?.scrollIntoView({ behavior: "smooth", block: "center" });

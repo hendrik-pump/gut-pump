@@ -1,7 +1,7 @@
 // Cache-first App-Shell-Caching für Offline-Betrieb auf iOS Safari. CACHE_NAME muss
 // bei jedem inhaltlichen Update der App-Dateien hochgezählt werden, damit Safari den
 // neuen Service Worker aktiviert und alte Assets ersetzt.
-const CACHE_NAME = "gutpump-v3";
+const CACHE_NAME = "gutpump-v4";
 
 const ASSETS = [
   "./",
@@ -19,6 +19,7 @@ const ASSETS = [
   "./js/render-dialogs.js",
   "./js/render-stats.js",
   "./js/xlsx-export.js",
+  "./js/pie-chart.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",

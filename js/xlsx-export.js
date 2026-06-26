@@ -24,14 +24,8 @@ export function exportRowsAsXlsx(rows, filename = "Datentabelle.xlsx") {
 }
 
 function buildSheetXml(rows) {
-  const header = ["Datum", "Übung", "Gruppe", "Kg", "Wdh"];
-  const headerRow = rowXml(1, [
-    inlineStrCell("A1", header[0]),
-    inlineStrCell("B1", header[1]),
-    inlineStrCell("C1", header[2]),
-    inlineStrCell("D1", header[3]),
-    inlineStrCell("E1", header[4]),
-  ]);
+  const header = ["Datum", "Übung", "Gruppe", "Typ", "Kg/Zeit", "Wdh/Int."];
+  const headerRow = rowXml(1, header.map((h, i) => inlineStrCell(`${String.fromCharCode(65 + i)}1`, h)));
 
   const dataRows = rows.map((row, i) => {
     const r = i + 2;
@@ -39,8 +33,9 @@ function buildSheetXml(rows) {
       inlineStrCell(`A${r}`, row.d),
       inlineStrCell(`B${r}`, row.exerciseName),
       inlineStrCell(`C${r}`, row.grp),
-      numberCell(`D${r}`, row.kg),
-      numberCell(`E${r}`, row.r),
+      inlineStrCell(`D${r}`, row.cardio ? "Cardio" : "Kraft"),
+      numberCell(`E${r}`, row.primary),
+      numberCell(`F${r}`, row.secondary),
     ]);
   }).join("");
 

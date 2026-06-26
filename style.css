@@ -169,6 +169,15 @@ body {
 .hbar-green { background: var(--teal); }
 .hbar-gold { background: #facc15; }
 
+.pie-row { display: flex; align-items: center; gap: 10px; }
+.pie-svg { width: 64px; height: 64px; flex-shrink: 0; }
+.pie-legend { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.pie-legend-row { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; }
+.pie-legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pie-legend-label { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.pie-legend-pct { color: var(--text-light); font-weight: 700; flex-shrink: 0; }
+.pie-empty { font-size: 12px; color: var(--text-muted); padding: 14px 0; }
+
 /* ---------- Exercise list ---------- */
 .exercise-list { padding: 8px 16px 24px; }
 
@@ -223,6 +232,7 @@ body {
 .card-last-entry { flex: 1; }
 .card-last-kg { font-size: 18px; font-weight: 800; }
 .card-last-r { font-size: 13px; font-weight: 600; opacity: 0.75; margin-left: 6px; }
+.card-last-session { font-size: 11px; opacity: 0.65; margin-top: 2px; }
 
 .pill-btn {
   display: flex;
@@ -465,6 +475,8 @@ tbody td { padding: 10px 6px; border-bottom: 1px solid #161b13; }
   color: var(--text-light);
   font-size: 15px;
 }
+.field-hint { font-size: 11px; color: var(--text-muted); margin: 4px 0 0; }
+#exercise-type-select:disabled { opacity: 0.6; cursor: not-allowed; }
 .image-upload-row { display: flex; align-items: center; gap: 12px; }
 .image-preview {
   width: 56px;

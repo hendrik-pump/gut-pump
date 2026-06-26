@@ -73,7 +73,7 @@
   <div class="table-scroll">
     <table id="data-table">
       <thead>
-        <tr><th>Datum</th><th>Übung</th><th>Gruppe</th><th>Kg</th><th>Wdh</th></tr>
+        <tr><th>Datum</th><th>Übung</th><th>Gruppe</th><th>Kg/Zeit</th><th>Wdh/Int.</th></tr>
       </thead>
       <tbody id="data-table-body"></tbody>
     </table>
@@ -116,6 +116,13 @@
         <option value="Arme">Arme</option>
         <option value="Beine">Beine</option>
       </select>
+
+      <label class="field-label" for="exercise-type-select">Typ</label>
+      <select id="exercise-type-select">
+        <option value="kraft">Kraft (Gewicht &amp; Wdh)</option>
+        <option value="cardio">Cardio (Zeit &amp; Intensität)</option>
+      </select>
+      <p class="field-hint">Der Typ kann nach dem Anlegen nicht mehr geändert werden.</p>
 
       <label class="field-label">Symbol / Bild</label>
       <div class="image-upload-row">

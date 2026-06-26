@@ -21,8 +21,20 @@ export function formatDmShort(d) {
   return `${dd}.${mm}`;
 }
 
+// Funktioniert für beide Übungstypen: Kraft-Sessions haben ein kg-Feld (gültig wenn
+// kg > 0), Cardio-Sessions haben ein zeit-Feld (gültig wenn zeit > 0).
 export function isValidSession(session) {
-  return typeof session.kg === "number" && session.kg > 0;
+  if (typeof session.kg === "number") return session.kg > 0;
+  if (typeof session.zeit === "number") return session.zeit > 0;
+  return false;
+}
+
+export function isKraftExercise(exercise) {
+  return (exercise.type ?? "kraft") === "kraft";
+}
+
+export function isCardioExercise(exercise) {
+  return exercise.type === "cardio";
 }
 
 export function validSessionsSortedDesc(exercise) {
@@ -73,6 +85,14 @@ export function isValidReps(value) {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
 }
 
+export function isValidZeit(value) {
+  return typeof value === "number" && !Number.isNaN(value) && value > 0;
+}
+
+export function isValidIntensitaet(value) {
+  return typeof value === "number" && !Number.isNaN(value) && value > 0;
+}
+
 export function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -88,28 +108,30 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Liefert die letzten 14 Kalendertage (älteste zuerst, heute zuletzt) im Format
-// "TT.MM.JJJJ", für die Tagesbalken der Auswertungs-Widgets.
-export function last14Days() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const days = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 86400000);
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    days.push(`${dd}.${mm}.${yyyy}`);
+// Liefert die letzten n Trainingstage (Tage mit mindestens einer gültigen Session
+// über die übergebenen Übungen) in aufsteigender Reihenfolge (ältester zuerst).
+// Anders als ein reines Kalenderfenster überspringt das Tage ohne Eintrag, sodass
+// z.B. "die letzten 14 Sessions" wirklich 14 tatsächliche Trainingstage zeigt.
+export function lastNTrainingDays(exercises, n) {
+  const allDates = new Set();
+  for (const ex of exercises) {
+    for (const s of ex.sessions) {
+      if (isValidSession(s)) allDates.add(s.d);
+    }
   }
-  return days;
+  return [...allDates]
+    .sort((a, b) => parseDmy(b) - parseDmy(a))
+    .slice(0, n)
+    .reverse();
 }
 
-// Geht die komplette Session-Historie einer Übung chronologisch durch und merkt sich,
-// an welchen Tagen ein neues maximales Gewicht erreicht wurde ("Gewichtssteigerung")
-// bzw. an welchen Tagen bei gleichbleibendem Maximalgewicht mehr Wiederholungen als
-// bisher erreicht wurden ("Wiederholungssteigerung"). Die jeweils erste Session einer
-// Übung legt nur die Ausgangs-Basis fest und zählt nicht selbst als Steigerung, da es
-// kein "bisheriges" Gewicht zum Vergleich gibt.
+// Geht die komplette Session-Historie einer Kraft-Übung chronologisch durch und
+// merkt sich, an welchen Tagen ein neues maximales Gewicht erreicht wurde
+// ("Gewichtssteigerung") bzw. an welchen Tagen bei gleichbleibendem Maximalgewicht
+// mehr Wiederholungen als bisher erreicht wurden ("Wdh-Steigerung"). Die jeweils
+// erste Session einer Übung legt nur die Ausgangs-Basis fest und zählt nicht selbst
+// als Steigerung, da es kein "bisheriges" Gewicht zum Vergleich gibt. Gilt nur für
+// Kraft-Übungen (Cardio hat kein analoges Gewicht/Wdh-Konzept).
 export function computeProgressionPRDates(exercise) {
   const sessionsAsc = validSessionsSortedDesc(exercise).slice().reverse();
   let maxWeight = null;
@@ -135,15 +157,17 @@ export function computeProgressionPRDates(exercise) {
   return { weightPRDates, repsPRDates };
 }
 
-// Aggregiert über alle Übungen: für jeden der letzten 14 Tage die Anzahl der
-// Übungen, die an diesem Tag eine Gewichts- bzw. Wiederholungssteigerung erreicht haben.
+// Aggregiert über alle Kraft-Übungen: für jeden der letzten 14 Trainingstage (nicht
+// Kalendertage) die Anzahl der Übungen, die an diesem Tag eine Gewichts- bzw.
+// Wdh-Steigerung erreicht haben.
 export function computeDailyProgressionCounts(exercises) {
-  const days = last14Days();
+  const kraftExercises = exercises.filter(isKraftExercise);
+  const days = lastNTrainingDays(kraftExercises, 14);
   const daySet = new Set(days);
   const weightCounts = Object.fromEntries(days.map((d) => [d, 0]));
   const repsCounts = Object.fromEntries(days.map((d) => [d, 0]));
 
-  for (const ex of exercises) {
+  for (const ex of kraftExercises) {
     const { weightPRDates, repsPRDates } = computeProgressionPRDates(ex);
     for (const d of weightPRDates) if (daySet.has(d)) weightCounts[d]++;
     for (const d of repsPRDates) if (daySet.has(d)) repsCounts[d]++;
@@ -177,6 +201,78 @@ export function latestTrainingDayExerciseCount(exercises) {
     }
   }
   return exerciseIds.size;
+}
+
+// Durchschnittliche Anzahl an Trainingseinheiten (= einzelne gültige Sessions, über
+// alle Übungen) pro Tag innerhalb der letzten `weeks` Wochen.
+export function avgTrainingSessionsPerDay(exercises, weeks = 6) {
+  const totalDays = weeks * 7;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = today.getTime() - (totalDays - 1) * 86400000;
+
+  let count = 0;
+  for (const ex of exercises) {
+    for (const s of ex.sessions) {
+      if (!isValidSession(s)) continue;
+      const t = parseDmy(s.d);
+      if (t >= cutoff && t <= today.getTime()) count++;
+    }
+  }
+  return count / totalDays;
+}
+
+// Verteilung der Trainingseinheiten (gültige Sessions) der letzten `weeks` Wochen
+// nach Muskelgruppe, als Array von {grp, count}, nur Gruppen mit count > 0.
+export function groupDistribution(exercises, weeks = 6) {
+  const totalDays = weeks * 7;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = today.getTime() - (totalDays - 1) * 86400000;
+
+  const counts = {};
+  for (const ex of exercises) {
+    for (const s of ex.sessions) {
+      if (!isValidSession(s)) continue;
+      const t = parseDmy(s.d);
+      if (t >= cutoff && t <= today.getTime()) {
+        counts[ex.grp] = (counts[ex.grp] ?? 0) + 1;
+      }
+    }
+  }
+  return Object.entries(counts)
+    .map(([grp, count]) => ({ grp, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// Bester Wert einer Übung innerhalb der letzten 2 Monate: bei Kraft das höchste
+// Gewicht und die dazu höchste Wiederholungszahl, bei Cardio die höchste Zeit und
+// die dazu höchste Intensität. Gibt es in den letzten 2 Monaten keine gültige
+// Session, wird auf die gesamte Historie zurückgefallen, damit nicht "keine Daten"
+// angezeigt wird, nur weil zuletzt länger nicht trainiert wurde.
+export function bestValueLast2Months(exercise) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = today.getTime() - 60 * 86400000;
+
+  const allValid = validSessionsSortedDesc(exercise);
+  let pool = allValid.filter((s) => parseDmy(s.d) >= cutoff);
+  if (pool.length === 0) pool = allValid;
+  if (pool.length === 0) return null;
+
+  const primaryKey = isCardioExercise(exercise) ? "zeit" : "kg";
+  const secondaryKey = isCardioExercise(exercise) ? "intensitaet" : "r";
+
+  let best = pool[0];
+  for (const s of pool) {
+    if (
+      s[primaryKey] > best[primaryKey] ||
+      (s[primaryKey] === best[primaryKey] && s[secondaryKey] > best[secondaryKey])
+    ) {
+      best = s;
+    }
+  }
+  return best;
 }
 
 export function generateId(prefix) {

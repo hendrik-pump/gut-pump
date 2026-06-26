@@ -20,3 +20,18 @@ export const GROUP_META = {
 export function defaultIconFor(grp) {
   return GROUP_META[grp]?.icon ?? ICON_BACK;
 }
+
+// Kräftige Akzentfarben je Gruppe fürs Kreisdiagramm (auf dunklem Hintergrund
+// besser lesbar als die blassen Karten-Hintergrundfarben).
+export const GROUP_CHART_COLORS = {
+  "Rücken":    "#34d399",
+  "Brust":     "#f87171",
+  "Schultern": "#60a5fa",
+  "Arme":      "#fbbf24",
+  "Beine":     "#2dd4a7",
+};
+
+export const EXERCISE_TYPE_LABELS = {
+  kraft: "Kraft (Gewicht & Wdh)",
+  cardio: "Cardio (Zeit & Intensität)",
+};

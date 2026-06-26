@@ -3,6 +3,7 @@ export const seedExercises = [
   {
     name: "Rücken unten",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "12.05.2026", kg: 10, r: 15 },
@@ -13,14 +14,17 @@ export const seedExercises = [
   {
     name: "Rudern frei",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 60, r: 8 },
       { d: "04.03.2026", kg: 65, r: 8 },
     ],
   },
   {
     name: "Rudern Turm",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "28.05.2026", kg: 70, r: 6 },
@@ -34,6 +38,7 @@ export const seedExercises = [
   {
     name: "Rudern MTS",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "12.05.2026", kg: 40, r: 8 },
@@ -43,6 +48,7 @@ export const seedExercises = [
   {
     name: "Rudern Maschine",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "02.04.2026", kg: 65, r: 7 },
@@ -53,6 +59,7 @@ export const seedExercises = [
   {
     name: "Klimmzüge",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "26.02.2026", kg: 74, r: 6 },
@@ -61,8 +68,10 @@ export const seedExercises = [
   {
     name: "Lat-Zug",
     grp: "Rücken",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 75, r: 7 },
       { d: "21.06.2026", kg: 75, r: 6 },
       { d: "07.06.2026", kg: 75, r: 6 },
       { d: "04.06.2026", kg: 75, r: 6 },
@@ -85,6 +94,7 @@ export const seedExercises = [
   {
     name: "Brustpresse",
     grp: "Brust",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "21.06.2026", kg: 75, r: 10 },
@@ -104,8 +114,10 @@ export const seedExercises = [
   {
     name: "Brust Bankdrücken",
     grp: "Brust",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 60, r: 8 },
       { d: "21.04.2026", kg: 60, r: 7 },
       { d: "09.04.2026", kg: 60, r: 7 },
       { d: "02.04.2026", kg: 60, r: 8 },
@@ -115,6 +127,7 @@ export const seedExercises = [
   {
     name: "Schultern drücken",
     grp: "Schultern",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "04.06.2026", kg: 47.5, r: 4 },
@@ -133,8 +146,10 @@ export const seedExercises = [
   {
     name: "Schultern Maschine",
     grp: "Schultern",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 55, r: 7 },
       { d: "21.06.2026", kg: 55, r: 8 },
       { d: "01.06.2026", kg: 55, r: 7 },
       { d: "21.04.2026", kg: 55, r: 6 },
@@ -147,6 +162,7 @@ export const seedExercises = [
   {
     name: "Schultern Seite Maschine",
     grp: "Schultern",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "21.06.2026", kg: 50, r: 6 },
@@ -168,6 +184,7 @@ export const seedExercises = [
   {
     name: "Schultern Seitheben frei",
     grp: "Schultern",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "01.06.2026", kg: 9, r: 7 },
@@ -178,8 +195,10 @@ export const seedExercises = [
   {
     name: "Bizeps Hanteln",
     grp: "Arme",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 16, r: 8 },
       { d: "01.06.2026", kg: 16, r: 8 },
       { d: "28.05.2026", kg: 16, r: 8 },
       { d: "18.05.2026", kg: 14, r: 9 },
@@ -196,6 +215,7 @@ export const seedExercises = [
   {
     name: "Bizeps Maschine",
     grp: "Arme",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "04.06.2026", kg: 25, r: 7 },
@@ -211,6 +231,7 @@ export const seedExercises = [
   {
     name: "Trizeps Kabel leicht",
     grp: "Arme",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "02.04.2026", kg: 93, r: 9 },
@@ -219,8 +240,10 @@ export const seedExercises = [
   {
     name: "Trizeps Kabel schwer",
     grp: "Arme",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 50, r: 8 },
       { d: "28.05.2026", kg: 45, r: 10 },
       { d: "26.05.2026", kg: 45, r: 11 },
       { d: "12.05.2026", kg: 45, r: 12 },
@@ -236,6 +259,7 @@ export const seedExercises = [
   {
     name: "Trizeps super schwer",
     grp: "Arme",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "01.06.2026", kg: 30, r: 8 },
@@ -248,8 +272,10 @@ export const seedExercises = [
   {
     name: "Beinpresse",
     grp: "Beine",
+    type: "kraft",
     img: null,
     sessions: [
+      { d: "24.06.2026", kg: 61, r: 10 },
       { d: "04.06.2026", kg: 61, r: 6 },
       { d: "01.06.2026", kg: 53, r: 10 },
       { d: "28.05.2026", kg: 53, r: 10 },
@@ -268,6 +294,7 @@ export const seedExercises = [
   {
     name: "Beinbeuger",
     grp: "Beine",
+    type: "kraft",
     img: null,
     sessions: [
     ],
@@ -275,6 +302,7 @@ export const seedExercises = [
   {
     name: "Beinstrecker",
     grp: "Beine",
+    type: "kraft",
     img: null,
     sessions: [
       { d: "12.05.2026", kg: 20, r: 8 },

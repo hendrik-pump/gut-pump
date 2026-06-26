@@ -2,23 +2,30 @@
 // und DB-Updates passieren in app.js.
 
 import { GROUP_ORDER } from "./groups.js";
-import { escapeHtml, parseDmy, validSessionsSortedDesc } from "./utils.js";
+import { escapeHtml, parseDmy, validSessionsSortedDesc, isCardioExercise } from "./utils.js";
 
 export const FILTER_ALL = "Alle";
 
 // Baut eine flache, sortierte Liste aller gültigen Sessions über alle Übungen.
+// primary/secondary sind die typabhängigen Rohwerte (kg/r bzw. zeit/intensitaet),
+// primaryField/secondaryField sagen, welcher DB-Feldname beim Inline-Edit
+// geschrieben werden muss.
 export function buildRows(exercises) {
   const rows = [];
   for (const ex of exercises) {
+    const cardio = isCardioExercise(ex);
     for (const s of validSessionsSortedDesc(ex)) {
       rows.push({
         exerciseId: ex.id,
         exerciseName: ex.name,
         grp: ex.grp,
+        cardio,
         sessionId: s.id,
         d: s.d,
-        kg: s.kg,
-        r: s.r,
+        primary: cardio ? s.zeit : s.kg,
+        secondary: cardio ? s.intensitaet : s.r,
+        primaryField: cardio ? "zeit" : "kg",
+        secondaryField: cardio ? "intensitaet" : "r",
       });
     }
   }
@@ -45,8 +52,8 @@ export function renderTable(tbody, countEl, rows, activeFilter) {
       <td class="cell-date">${row.d}</td>
       <td class="cell-name">${escapeHtml(row.exerciseName)}</td>
       <td><span class="group-badge" data-grp="${row.grp}">${row.grp}</span></td>
-      <td class="editable-cell" data-action="edit-cell" data-field="kg" data-value="${row.kg}">${formatKg(row.kg)} kg</td>
-      <td class="editable-cell" data-action="edit-cell" data-field="r" data-value="${row.r}">${row.r}</td>
+      <td class="editable-cell" data-action="edit-cell" data-field="${row.primaryField}" data-value="${row.primary}" data-unit="${row.cardio ? "min" : "kg"}">${formatPrimary(row.primary, row.cardio)}</td>
+      <td class="editable-cell" data-action="edit-cell" data-field="${row.secondaryField}" data-value="${row.secondary}" data-unit="${row.cardio ? "int" : ""}">${formatSecondary(row.secondary, row.cardio)}</td>
     </tr>
   `).join("");
 
@@ -66,17 +73,31 @@ export function startEditCell(td) {
 }
 
 export function restoreCell(td) {
-  const field = td.dataset.field;
   const value = Number(td.dataset.value);
-  td.innerHTML = field === "kg" ? `${formatKg(value)} kg` : `${value}`;
+  td.innerHTML = formatCellValue(td, value);
 }
 
 export function commitCellDisplay(td, newValue) {
-  const field = td.dataset.field;
   td.dataset.value = String(newValue);
-  td.innerHTML = field === "kg" ? `${formatKg(newValue)} kg` : `${newValue}`;
+  td.innerHTML = formatCellValue(td, newValue);
 }
 
-function formatKg(kg) {
-  return Number.isInteger(kg) ? String(kg) : String(kg).replace(".", ",");
+function formatCellValue(td, value) {
+  const unit = td.dataset.unit;
+  if (unit === "kg") return `${formatNum(value)} kg`;
+  if (unit === "min") return `${formatNum(value)} min`;
+  if (unit === "int") return `Int. ${formatNum(value)}`;
+  return `${formatNum(value)}`;
+}
+
+function formatPrimary(value, cardio) {
+  return cardio ? `${formatNum(value)} min` : `${formatNum(value)} kg`;
+}
+
+function formatSecondary(value, cardio) {
+  return cardio ? `Int. ${formatNum(value)}` : `${formatNum(value)}`;
+}
+
+function formatNum(n) {
+  return Number.isInteger(n) ? String(n) : String(n).replace(".", ",");
 }

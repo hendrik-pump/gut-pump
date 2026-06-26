@@ -3,6 +3,10 @@
 // pro Übung: kg-Zeile mit Übungsname in Spalte A, direkt gefolgt von der zugehörigen
 // Wdh-Zeile) und schreibt js/seed-data.js neu.
 //
+// ACHTUNG: Überschreibt js/seed-data.js komplett. Manuell ergänzte Einträge oder
+// Cardio-Übungen (die nicht aus dem Excel-Export stammen können, da dort nur
+// Kraft-Daten vorliegen) gehen dabei verloren, falls sie nicht vorher gesichert wurden.
+//
 // Nur Node-Bordmittel, keine npm-Pakete. Ausführen mit:
 //   node tools/convert-xlsx.mjs "<Pfad zur xlsx-Datei>"
 //
@@ -246,6 +250,7 @@ function renderSeedDataJs(exercises) {
     lines.push("  {");
     lines.push(`    name: ${JSON.stringify(ex.name)},`);
     lines.push(`    grp: ${JSON.stringify(ex.grp)},`);
+    lines.push('    type: "kraft",'); // Excel-Importe sind immer Kraft-Übungen
     lines.push("    img: null,");
     lines.push("    sessions: [");
     for (const s of ex.sessions) {

@@ -11,7 +11,10 @@ const PAD_RIGHT = 12;
 const PAD_TOP = 22;
 const PAD_BOTTOM = 22;
 
-export function renderChart(container, validSessions) {
+// valueKey/labelKey machen das Chart für beide Übungstypen nutzbar: Kraft nutzt
+// kg (Y-Achse) + r (Label über Punkten), Cardio nutzt zeit + intensitaet. unit
+// bestimmt die Y-Achsen-Beschriftung ("kg" bzw. "min").
+export function renderChart(container, validSessions, { valueKey = "kg", labelKey = "r", unit = "kg" } = {}) {
   if (!validSessions || validSessions.length === 0) {
     renderEmptyState(container);
     return;
@@ -20,9 +23,9 @@ export function renderChart(container, validSessions) {
   const sorted = validSessions.slice().sort((a, b) => parseDmy(a.d) - parseDmy(b.d));
   const points = sorted.slice(-10); // höchstens die letzten 10 Sessions
 
-  const kgValues = points.map((p) => p.kg);
-  const minData = Math.min(...kgValues);
-  const maxData = Math.max(...kgValues);
+  const values = points.map((p) => p[valueKey]);
+  const minData = Math.min(...values);
+  const maxData = Math.max(...values);
   const minDisplay = Math.floor(minData / 5) * 5 - 5;
   const maxDisplay = Math.ceil(maxData / 5) * 5 + 5;
 
@@ -35,12 +38,12 @@ export function renderChart(container, validSessions) {
   const xFor = (i) => (points.length === 1
     ? PAD_LEFT + chartW / 2
     : PAD_LEFT + (chartW * i) / (points.length - 1));
-  const yFor = (kg) => PAD_TOP + chartH * (1 - (kg - minDisplay) / (maxDisplay - minDisplay));
+  const yFor = (v) => PAD_TOP + chartH * (1 - (v - minDisplay) / (maxDisplay - minDisplay));
 
   const gridLines = ticks.map((t) => {
     const y = yFor(t);
     return `<line x1="${PAD_LEFT}" y1="${y}" x2="${WIDTH - PAD_RIGHT}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1" />
-            <text x="${PAD_LEFT - 6}" y="${y + 4}" text-anchor="end" font-size="9" fill="var(--text-muted)">${t} kg</text>`;
+            <text x="${PAD_LEFT - 6}" y="${y + 4}" text-anchor="end" font-size="9" fill="var(--text-muted)">${t} ${unit}</text>`;
   }).join("");
 
   // Labeling-Regel (vereint Abschnitt 3.3 + 10): bis 7 Punkte alle Daten beschriften,
@@ -58,10 +61,10 @@ export function renderChart(container, validSessions) {
 
   points.forEach((p, i) => {
     const x = xFor(i);
-    const y = yFor(p.kg);
+    const y = yFor(p[valueKey]);
     pathD += (i === 0 ? "M" : "L") + `${x},${y} `;
     circles += `<circle cx="${x}" cy="${y}" r="4" fill="var(--chart-line)" />`;
-    repLabels += `<text x="${x}" y="${y - 10}" text-anchor="middle" font-size="10" fill="var(--chart-label)" font-weight="700">${p.r}</text>`;
+    repLabels += `<text x="${x}" y="${y - 10}" text-anchor="middle" font-size="10" fill="var(--chart-label)" font-weight="700">${p[labelKey]}</text>`;
     if (shouldLabel(i)) {
       dateLabels += `<text x="${x}" y="${HEIGHT - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${formatDmShort(p.d)}</text>`;
     }

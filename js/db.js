@@ -62,6 +62,7 @@ export async function ensureSeedImported() {
       id,
       name: ex.name,
       grp: ex.grp,
+      type: ex.type ?? "kraft",
       img: ex.img ?? null,
       createdAt: index,
       sessions: ex.sessions.map((s) => ({ id: generateId("s"), d: s.d, kg: s.kg, r: s.r })),
@@ -88,16 +89,28 @@ export async function getExercise(id) {
   return reqToPromise(store.get(id));
 }
 
-export async function addExercise({ name, grp, img }) {
+// type ('kraft' | 'cardio') wird nur bei der Erstellung gesetzt und ist danach
+// unveränderlich (siehe updateExercise, das type bewusst nie übernimmt).
+export async function addExercise({ name, grp, img, type }) {
   const db = await openDB();
   const store = tx(db, [STORE_EXERCISES], "readwrite").objectStore(STORE_EXERCISES);
   // Date.now() reicht hier (im Unterschied zum Massen-Import) aus, da neue Übungen
   // einzeln per Nutzeraktion angelegt werden, nicht in einer engen Schleife.
-  const exercise = { id: generateId("ex"), name, grp, img: img ?? null, createdAt: Date.now(), sessions: [] };
+  const exercise = {
+    id: generateId("ex"),
+    name,
+    grp,
+    type: type ?? "kraft",
+    img: img ?? null,
+    createdAt: Date.now(),
+    sessions: [],
+  };
   await reqToPromise(store.add(exercise));
   return exercise;
 }
 
+// Übernimmt bewusst nie ein "type"-Feld aus dem Aufrufer – der Übungstyp ist nach
+// dem Anlegen unveränderlich.
 export async function updateExercise(id, { name, grp, img }) {
   const db = await openDB();
   const store = tx(db, [STORE_EXERCISES], "readwrite").objectStore(STORE_EXERCISES);
@@ -120,27 +133,30 @@ export async function deleteExercise(id) {
 }
 
 // Fügt eine neue Session mit heutigem Datum vorne in exercise.sessions ein.
-export async function addSession(exerciseId, { kg, r }) {
+// fields enthält je nach Übungstyp {kg, r} oder {zeit, intensitaet}.
+export async function addSession(exerciseId, fields) {
   const db = await openDB();
   const store = tx(db, [STORE_EXERCISES], "readwrite").objectStore(STORE_EXERCISES);
   const exercise = await reqToPromise(store.get(exerciseId));
   if (!exercise) throw new Error(`Übung ${exerciseId} nicht gefunden.`);
-  const session = { id: generateId("s"), d: formatDateToday(), kg, r };
+  const session = { id: generateId("s"), d: formatDateToday(), ...fields };
   exercise.sessions = [session, ...exercise.sessions];
   await reqToPromise(store.put(exercise));
   return exercise;
 }
 
-// Inline-Edit in der Datentabelle: aktualisiert kg/r einer bestehenden Session.
-export async function updateSession(exerciseId, sessionId, { kg, r }) {
+// Inline-Edit in der Datentabelle: aktualisiert einzelne Felder (kg/r bzw.
+// zeit/intensitaet) einer bestehenden Session.
+export async function updateSession(exerciseId, sessionId, fields) {
   const db = await openDB();
   const store = tx(db, [STORE_EXERCISES], "readwrite").objectStore(STORE_EXERCISES);
   const exercise = await reqToPromise(store.get(exerciseId));
   if (!exercise) throw new Error(`Übung ${exerciseId} nicht gefunden.`);
   const session = exercise.sessions.find((s) => s.id === sessionId);
   if (!session) throw new Error(`Session ${sessionId} nicht gefunden.`);
-  if (kg !== undefined) session.kg = kg;
-  if (r !== undefined) session.r = r;
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) session[key] = value;
+  }
   await reqToPromise(store.put(exercise));
   return exercise;
 }

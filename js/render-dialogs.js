@@ -10,6 +10,7 @@ const titleEl = document.getElementById("exercise-dialog-title");
 const form = document.getElementById("exercise-form");
 const nameInput = document.getElementById("exercise-name-input");
 const groupSelect = document.getElementById("exercise-group-select");
+const typeSelect = document.getElementById("exercise-type-select");
 const imagePreview = document.getElementById("exercise-image-preview");
 const imageInput = document.getElementById("exercise-image-input");
 const confirmBtn = document.getElementById("exercise-confirm-btn");
@@ -29,7 +30,7 @@ export function initDialogs({ onSave, onDelete }) {
     e.preventDefault();
     const name = nameInput.value.trim();
     if (!name) return; // Pflichtfeld, HTML "required" deckt das meiste ab
-    callbacks.onSave({ id: editingId, name, grp: groupSelect.value, img: currentImg });
+    callbacks.onSave({ id: editingId, name, grp: groupSelect.value, type: typeSelect.value, img: currentImg });
     closeExerciseDialog();
   });
 
@@ -75,6 +76,8 @@ export function openAddDialog() {
   currentImg = null;
   nameInput.value = "";
   groupSelect.value = "Rücken";
+  typeSelect.value = "kraft";
+  typeSelect.disabled = false;
   imageInput.value = "";
   renderPreview();
   titleEl.textContent = "Übung hinzufügen";
@@ -89,6 +92,8 @@ export function openEditDialog(exercise) {
   currentImg = exercise.img ?? null;
   nameInput.value = exercise.name;
   groupSelect.value = exercise.grp;
+  typeSelect.value = exercise.type ?? "kraft";
+  typeSelect.disabled = true; // Typ ist nach dem Anlegen unveränderlich
   imageInput.value = "";
   renderPreview();
   titleEl.textContent = "Übung bearbeiten";
