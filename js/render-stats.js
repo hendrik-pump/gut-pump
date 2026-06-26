@@ -6,7 +6,7 @@
 import {
   computeDailyProgressionCounts,
   latestTrainingDayExerciseCount,
-  avgTrainingSessionsPerDay,
+  avgExercisesPerSession,
   groupDistribution,
   formatDmShort,
 } from "./utils.js";
@@ -18,7 +18,7 @@ const BAR_CAP = 3; // Balken zeigt Steigerungen nur bis 3 an, mehr wird gekappt 
 export function renderStatsSection(container, exercises) {
   const { days, weightCounts, repsCounts } = computeDailyProgressionCounts(exercises);
   const exerciseCount = latestTrainingDayExerciseCount(exercises);
-  const avgPerDay = avgTrainingSessionsPerDay(exercises, 6);
+  const avgExercises = avgExercisesPerSession(exercises, 6);
   const distribution = groupDistribution(exercises, 6);
 
   container.innerHTML = `
@@ -30,8 +30,8 @@ export function renderStatsSection(container, exercises) {
       ${exerciseCountCardHtml(exerciseCount)}
     </div>
     <div class="stats-row">
-      ${avgPerDayCardHtml(avgPerDay)}
-      <div class="stat-card" data-pie-card>
+      ${avgPerDayCardHtml(avgExercises)}
+      <div class="stat-card stat-card-pie" data-pie-card>
         <div class="stat-card-header">
           <span class="stat-title">Muskelgruppen</span>
           <span class="stat-sub">Letzte 6 Wochen</span>
@@ -96,10 +96,10 @@ function exerciseCountCardHtml(count) {
 function avgPerDayCardHtml(avg) {
   const formatted = avg.toFixed(2).replace(".", ",");
   return `
-    <div class="stat-card">
+    <div class="stat-card stat-card-narrow">
       <div class="stat-card-header">
-        <span class="stat-title">Ø Trainingseinheiten</span>
-        <span class="stat-sub">Pro Tag, letzte 6 Wochen</span>
+        <span class="stat-title">Ø Übungen</span>
+        <span class="stat-sub">Pro Einheit, letzte 6 Wochen</span>
       </div>
       <div class="stat-number">${formatted}</div>
     </div>

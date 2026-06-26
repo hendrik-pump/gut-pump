@@ -76,6 +76,52 @@ export async function ensureSeedImported() {
   });
 }
 
+// Einmalige Nachträge zu bereits importierten Installationen: seed-data.js wird nur
+// beim allerersten Start gelesen (ensureSeedImported), daher kommen neue Sessions,
+// die nachträglich in seed-data.js ergänzt werden, bei Bestandsnutzern nie an. Dieser
+// Patch trägt die am 24.06. nachgemeldeten Sessions gezielt nach, per Name+Datum+Wert
+// dedupliziert, damit ein erneuter Lauf (z.B. bei einem Fresh-Import) nichts doppelt.
+const PATCH_20260624_SESSIONS = [
+  { name: "Schultern Maschine", kg: 55, r: 7 },
+  { name: "Beinpresse", kg: 61, r: 10 },
+  { name: "Trizeps Kabel schwer", kg: 50, r: 8 },
+  { name: "Bizeps Hanteln", kg: 16, r: 8 },
+  { name: "Brust Bankdrücken", kg: 60, r: 8 },
+  { name: "Lat-Zug", kg: 75, r: 7 },
+  { name: "Rudern frei", kg: 60, r: 8 },
+];
+const PATCH_20260624_DATE = "24.06.2026";
+
+export async function ensurePatch20260624Applied() {
+  const db = await openDB();
+  const metaTx = tx(db, [STORE_META], "readonly");
+  const existing = await reqToPromise(metaTx.objectStore(STORE_META).get("patch20260624Applied"));
+  if (existing && existing.value) return;
+
+  const writeTx = tx(db, [STORE_EXERCISES, STORE_META], "readwrite");
+  const exStore = writeTx.objectStore(STORE_EXERCISES);
+  const all = await reqToPromise(exStore.getAll());
+  for (const patch of PATCH_20260624_SESSIONS) {
+    const exercise = all.find((e) => e.name === patch.name);
+    if (!exercise) continue;
+    const alreadyHasSession = exercise.sessions.some(
+      (s) => s.d === PATCH_20260624_DATE && s.kg === patch.kg && s.r === patch.r
+    );
+    if (alreadyHasSession) continue;
+    exercise.sessions = [
+      { id: generateId("s"), d: PATCH_20260624_DATE, kg: patch.kg, r: patch.r },
+      ...exercise.sessions,
+    ];
+    exStore.put(exercise);
+  }
+  writeTx.objectStore(STORE_META).put({ key: "patch20260624Applied", value: true });
+
+  await new Promise((resolve, reject) => {
+    writeTx.oncomplete = () => resolve();
+    writeTx.onerror = () => reject(writeTx.error);
+  });
+}
+
 export async function getAllExercises() {
   const db = await openDB();
   const store = tx(db, [STORE_EXERCISES], "readonly").objectStore(STORE_EXERCISES);

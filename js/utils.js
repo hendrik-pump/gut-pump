@@ -203,23 +203,33 @@ export function latestTrainingDayExerciseCount(exercises) {
   return exerciseIds.size;
 }
 
-// Durchschnittliche Anzahl an Trainingseinheiten (= einzelne gültige Sessions, über
-// alle Übungen) pro Tag innerhalb der letzten `weeks` Wochen.
-export function avgTrainingSessionsPerDay(exercises, weeks = 6) {
+// Durchschnittliche Anzahl an verschiedenen Übungen pro Trainingseinheit (= Tag mit
+// mindestens einer gültigen Session) innerhalb der letzten `weeks` Wochen. Wird NICHT
+// auf alle Kalendertage des Fensters verteilt (das würde an trainingsfreien Tagen
+// künstlich verwässern), sondern nur auf die Tage, an denen tatsächlich trainiert
+// wurde. Mehrere Sessions derselben Übung am selben Tag zählen dabei nur einmal.
+export function avgExercisesPerSession(exercises, weeks = 6) {
   const totalDays = weeks * 7;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const cutoff = today.getTime() - (totalDays - 1) * 86400000;
 
-  let count = 0;
+  const exerciseCountByDay = {};
   for (const ex of exercises) {
+    const daysSeenForEx = new Set();
     for (const s of ex.sessions) {
       if (!isValidSession(s)) continue;
       const t = parseDmy(s.d);
-      if (t >= cutoff && t <= today.getTime()) count++;
+      if (t < cutoff || t > today.getTime()) continue;
+      if (daysSeenForEx.has(s.d)) continue;
+      daysSeenForEx.add(s.d);
+      exerciseCountByDay[s.d] = (exerciseCountByDay[s.d] ?? 0) + 1;
     }
   }
-  return count / totalDays;
+  const trainingDays = Object.keys(exerciseCountByDay);
+  if (trainingDays.length === 0) return 0;
+  const total = trainingDays.reduce((sum, d) => sum + exerciseCountByDay[d], 0);
+  return total / trainingDays.length;
 }
 
 // Verteilung der Trainingseinheiten (gültige Sessions) der letzten `weeks` Wochen

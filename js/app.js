@@ -4,7 +4,7 @@
 // dieser Datenmenge (21 Übungen, je wenige Dutzend Sessions) unproblematisch und am
 // wenigsten fehleranfällig.
 
-import { ensureSeedImported, getAllExercises, addExercise, updateExercise, deleteExercise, addSession, updateSession } from "./db.js";
+import { ensureSeedImported, ensurePatch20260624Applied, getAllExercises, addExercise, updateExercise, deleteExercise, addSession, updateSession } from "./db.js";
 import { renderExerciseList, renderSessionsBadge, toggleEntryForm } from "./render-list.js";
 import { renderStatsSection } from "./render-stats.js";
 import { buildRows, renderFilterPills, renderTable, FILTER_ALL, startEditCell, restoreCell, commitCellDisplay } from "./render-table.js";
@@ -36,6 +36,7 @@ const exportXlsxBtn = document.getElementById("export-xlsx-btn");
 
 async function init() {
   await ensureSeedImported();
+  await ensurePatch20260624Applied();
   await refreshAndRender();
 
   wireHeader();
