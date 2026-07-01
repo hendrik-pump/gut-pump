@@ -10,7 +10,7 @@ import {
   validSessionsSortedDesc,
   sessionsInLast7Days,
   isCardioExercise,
-  bestValueLast2Months,
+  bestValueRecent,
 } from "./utils.js";
 import { renderChart } from "./chart.js";
 
@@ -18,12 +18,21 @@ const ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 const ICON_PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
 
-export function renderExerciseList(container, exercises, editMode) {
+const LIST_FILTER_ALL = "Alle";
+
+export function renderExerciseList(container, exercises, editMode, groupFilter = LIST_FILTER_ALL) {
+  // Tabs: nur Gruppen anzeigen, die tatsächlich Übungen haben
+  const presentGroups = GROUP_ORDER.filter((grp) => exercises.some((e) => e.grp === grp));
+  const tabs = [LIST_FILTER_ALL, ...presentGroups].map((g) => `
+    <button class="group-tab ${g === groupFilter ? "active" : ""}" data-action="set-list-filter" data-grp="${g}">${g}</button>
+  `).join("");
+
+  const filtered = groupFilter === LIST_FILTER_ALL ? exercises : exercises.filter((e) => e.grp === groupFilter);
   const byGroup = GROUP_ORDER
-    .map((grp) => ({ grp, items: exercises.filter((e) => e.grp === grp) }))
+    .map((grp) => ({ grp, items: filtered.filter((e) => e.grp === grp) }))
     .filter((g) => g.items.length > 0);
 
-  container.innerHTML = byGroup.map((g) => `
+  container.innerHTML = `<div class="group-tabs">${tabs}</div>` + byGroup.map((g) => `
     <section class="group-section" data-grp-section="${g.grp}">
       <h2 class="group-title">${g.grp.toUpperCase()}</h2>
       ${g.items.map((ex) => cardHtml(ex, editMode)).join("")}
@@ -31,7 +40,7 @@ export function renderExerciseList(container, exercises, editMode) {
   `).join("");
 
   // Charts werden nach dem Einfügen ins DOM gerendert (chart.js schreibt eigenes innerHTML).
-  for (const ex of exercises) {
+  for (const ex of filtered) {
     const chartEl = container.querySelector(`[data-chart-id="${ex.id}"]`);
     if (chartEl) {
       const cardio = isCardioExercise(ex);
@@ -47,7 +56,7 @@ export function renderExerciseList(container, exercises, editMode) {
 function cardHtml(ex, editMode) {
   const cardio = isCardioExercise(ex);
   const last = lastValidSession(ex);
-  const best = bestValueLast2Months(ex);
+  const best = bestValueRecent(ex);
   const done = isDoneToday(ex);
 
   return `

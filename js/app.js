@@ -17,6 +17,7 @@ const state = {
   currentView: "list", // 'list' | 'table'
   editMode: false,
   tableFilter: FILTER_ALL,
+  listGroupFilter: "Alle",
 };
 
 const listContainer = document.getElementById("exercise-list");
@@ -56,7 +57,7 @@ async function refreshAndRender() {
 }
 
 function renderCurrentView() {
-  renderExerciseList(listContainer, state.exercises, state.editMode);
+  renderExerciseList(listContainer, state.exercises, state.editMode, state.listGroupFilter);
   renderSessionsBadge(sessionsBadge, state.exercises);
   renderStatsSection(statsSection, state.exercises);
 
@@ -115,7 +116,10 @@ function wireExerciseList() {
     const card = actionEl.closest(".exercise-card");
     const id = actionEl.dataset.id;
 
-    if (action === "toggle-entry-form") {
+    if (action === "set-list-filter") {
+      state.listGroupFilter = actionEl.dataset.grp;
+      renderCurrentView();
+    } else if (action === "toggle-entry-form") {
       toggleEntryForm(card);
     } else if (action === "save-entry") {
       await handleSaveEntry(card, id);

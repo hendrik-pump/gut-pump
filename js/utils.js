@@ -255,15 +255,15 @@ export function groupDistribution(exercises, weeks = 6) {
     .sort((a, b) => b.count - a.count);
 }
 
-// Bester Wert einer Übung innerhalb der letzten 2 Monate: bei Kraft das höchste
+// Bester Wert einer Übung innerhalb der letzten 6 Monate: bei Kraft das höchste
 // Gewicht und die dazu höchste Wiederholungszahl, bei Cardio die höchste Zeit und
-// die dazu höchste Intensität. Gibt es in den letzten 2 Monaten keine gültige
+// die dazu höchste Intensität. Gibt es in den letzten 6 Monaten keine gültige
 // Session, wird auf die gesamte Historie zurückgefallen, damit nicht "keine Daten"
 // angezeigt wird, nur weil zuletzt länger nicht trainiert wurde.
-export function bestValueLast2Months(exercise) {
+export function bestValueRecent(exercise) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const cutoff = today.getTime() - 60 * 86400000;
+  const cutoff = today.getTime() - 180 * 86400000;
 
   const allValid = validSessionsSortedDesc(exercise);
   let pool = allValid.filter((s) => parseDmy(s.d) >= cutoff);
@@ -283,6 +283,37 @@ export function bestValueLast2Months(exercise) {
     }
   }
   return best;
+}
+
+// Durchschnittliche Anzahl Trainingstage (Tage mit ≥1 gültiger Session) pro Woche
+// innerhalb der letzten `weeks` Wochen.
+export function avgSessionsPerWeek(exercises, weeks = 6) {
+  const totalDays = weeks * 7;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = today.getTime() - (totalDays - 1) * 86400000;
+
+  const trainingDays = new Set();
+  for (const ex of exercises) {
+    for (const s of ex.sessions) {
+      if (!isValidSession(s)) continue;
+      const t = parseDmy(s.d);
+      if (t >= cutoff && t <= today.getTime()) trainingDays.add(s.d);
+    }
+  }
+  return trainingDays.size / weeks;
+}
+
+// Gibt die Menge aller Datums-Strings zurück, an denen mindestens eine gültige
+// Session stattgefunden hat – Basis für die Kalender-Kachel.
+export function trainingDaysSet(exercises) {
+  const days = new Set();
+  for (const ex of exercises) {
+    for (const s of ex.sessions) {
+      if (isValidSession(s)) days.add(s.d);
+    }
+  }
+  return days;
 }
 
 export function generateId(prefix) {
